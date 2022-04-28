@@ -15,7 +15,7 @@ library(readxl)
 library(writexl)
 library(DT)
 
-complaints <- readRDS("~/Downloads/april_12_hw/consumer-complaints/complaints.rds")
+complaints <- readRDS("~/Downloads/github/consumer-complaints-gw/complaints.rds")
 
 complaints <- complaints %>% 
   clean_names()
