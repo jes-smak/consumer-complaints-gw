@@ -1,12 +1,15 @@
 ---
-title: "Consumers are COMPLAINING!"
+title: "Consumer Financial Protection Bureau complaints from March-December 2020"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
+    orientation: rows
+    vertical_layout: scroll
 ---
 
+Findings
+==================
 ```{r setup, include=FALSE}
+#load libraries
 library(flexdashboard)
 library(tidyverse)
 library(lubridate)
@@ -14,42 +17,165 @@ library(janitor)
 library(readxl)
 library(writexl)
 library(DT)
+library(scales)
+library(ggthemes)
+library(esquisse)
+library(shiny)
+library(jsonlite)
+library(maptools)
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(leaflet)
+library(plotly)
+library(formattable)
 
+
+#Import data
 complaints <- readRDS("~/Downloads/github/consumer-complaints-gw/complaints.rds")
 
+#Clean data
 complaints <- complaints %>% 
   clean_names()
 
+#Make a smaller table of most common complaints
+condensed_products <- complaints %>% 
+  filter(product %in% c("Credit reporting, credit repair services, or other personal consumer reports", 
+                          "Debt collection", 
+                          "Mortgage", 
+                          "Credit card or prepaid card"))
+
+#Making a dataset of most complained about states
+condensed_states <- complaints %>% 
+  filter(state %in% c("FL", 
+                      "CA", 
+                      "TX", 
+                      "NY",
+                      "GA", 
+                      "PA", 
+                      "IL", 
+                      "NJ", 
+                      "NC")) 
+
+#Making a dataset of condensed products and states
+condensed_p_s <- complaints %>% 
+  filter(state %in% c("FL", 
+                      "CA", 
+                      "TX", 
+                      "NY",
+                      "GA", 
+                      "PA", 
+                      "IL", 
+                      "NJ", 
+                      "NC")) %>% 
+filter(product %in% c("Credit reporting, credit repair services, or other personal consumer reports", 
+                          "Debt collection", 
+                          "Mortgage", 
+                          "Credit card or prepaid card"))
+
 ```
 
-Column {data-width=500}
+Column
+-----------------------------------------------------------------------
+
+### Company response by product, by state
+
+```{r, fig.width=10, fig.height=7}
+
+#Using GGPlot
+ggplot(condensed_p_s, aes(product, company_response_to_consumer, colour = state)) + 
+  geom_point() + labs(x = "Product", y = "Company Response") + scale_x_discrete(label = c("Personal Reports", "Debt", "Credit Card", "Mortgage")) + scale_colour_brewer(palette = "Spectral")
+
+```
+
+Row
 -----------------------------------------------------------------------
 
 ### Most Common Complaints
 
 ```{r}
 
+library(plotly)
+fig <- plot_ly(
+  x = c("Personal Consumer Reports", "Debt Collection", "Credit Card or Prepaid Card"),
+  y = c(255748, 46088, 29128),
+  name = "Most Common Complaints",
+  type = "bar"
+)
+fig
+
+
+
+#Most complained about product
 complaints %>%
   count(product, sort = TRUE)
+
 ```
 
-Column {data-width=500}
+Row
 -----------------------------------------------------------------------
 
-### Companies being complained about MOST
+### Lowest complaint rate
 
 ```{r}
 
-complaints %>%
-  count(company, sort = TRUE)
+valueBox("Student Loan Debt", icon="fa-pencil")
+
 ```
 
-### Companies with complaints about Credit reporting, credit repair services, or other personal consumer reports
+### Highest complaint rate
 
 ```{r}
 
-complaints %>%
-  filter(product == "Credit reporting, credit repair services, or other personal consumer reports") %>% 
-  count(company, sort = TRUE)
+valueBox("Personal Consumer Reports", icon="fa-money")
+
 ```
 
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Companies that recieve the most complaints
+
+```{r}
+
+library(plotly)
+fig <- plot_ly(
+  x = c("Experian Information Solutions Inc.", "TRANSUNION INTERMEDIATE HOLDINGS, INC.", "EQUIFAX, INC.", "CAPITAL ONE FINANCIAL CORPORATION", "BANK OF AMERICA, NATIONAL ASSOCIATION"),
+  y = c(81264, 77386, 70075, 8317, 8191),
+  name = "Companies that receive the most complaints",
+  type = "bar"
+)
+fig
+
+complaints %>%
+  count(company, sort = TRUE)
+
+```
+
+### Most complaints per state
+
+```{r}
+
+library(plotly)
+fig <- plot_ly(
+  x = c("FL", "CA", "TX", "NY", "GA", "PA", "IL", "NJ", "NC"),
+  y = c(50449, 46721, 44504, 25445, 23881, 18380, 12732, 12643, 10878),
+  name = "Most complaints per state",
+  type = "bar"
+)
+fig
+
+#Most complaints per state
+complaints %>%
+  count(state, sort = TRUE)
+```
+
+About
+==================
+
+The following data examines complaints the the Consumer Financial Protection Bureau sends to companies for response. The complaints are published in the Consumer Complaint Database after the company responds, confirming a commercial relationship with the consumer, or after 15 days. 
+
+The visualizations seen in the "Findings" tab seek to examine the most common consumer complaints, the companies that come up most frequently, and the states that appear most frequently in the data.
+
+It is important to note the condensed data sizes for some of the graphs and charts, allowing for a less cluttered data table. 
