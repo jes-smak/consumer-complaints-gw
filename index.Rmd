@@ -80,17 +80,7 @@ filter(product %in% c("Credit reporting, credit repair services, or other person
                           "Mortgage", 
                           "Credit card or prepaid card"))
 
-```
-
-Column
------------------------------------------------------------------------
-
-### Total complaints, by state
-
-```{r, fig.width=10, fig.height=7}
-
-### GEOGRAPHIC DATA ####
-
+#MAP SETUP 
 # # Downloading the shapefile boundaries for states using tigris package
 states <- states(cb=T)
 
@@ -113,6 +103,16 @@ states_merged_sb$total <- as.integer(states_merged_sb$total)
 mypalette <- colorNumeric("Spectral", domain=states_merged_sb$total)
             
 popup_sb <- paste0("Total complaints: ", as.character(states_merged_sb$total))
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Total complaints, by state
+
+```{r, fig.width=10, fig.height=7}
+
+#MAP
 
 leaflet() %>% 
   addTiles() %>% # <-- Base map
@@ -223,7 +223,7 @@ complaints %>%
 About
 ==================
 
-The following data examines complaints the the Consumer Financial Protection Bureau sends to companies for response. The complaints are published in the Consumer Complaint Database after the company responds, confirming a commercial relationship with the consumer, or after 15 days. 
+The following data examines complaints the Consumer Financial Protection Bureau sends to companies for response. The complaints are published in the Consumer Complaint Database after the company responds, confirming a commercial relationship with the consumer, or after 15 days. 
 
 The visualizations seen in the "Findings" tab seek to examine the most common consumer complaints, the companies that come up most frequently, and the states that appear most frequently in the data.
 
