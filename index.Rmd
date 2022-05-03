@@ -29,7 +29,13 @@ library(dplyr)
 library(purrr)
 library(leaflet)
 library(plotly)
-library(formattable)
+library(glue)
+library(kableExtra)
+library(RColorBrewer)
+library(htmlwidgets)
+library(htmltools)
+library(tigris)
+options(tigris_class = "sf")
 
 
 #Import data
@@ -79,13 +85,55 @@ filter(product %in% c("Credit reporting, credit repair services, or other person
 Column
 -----------------------------------------------------------------------
 
-### Company response by product, by state
+### Total complaints, by state
 
 ```{r, fig.width=10, fig.height=7}
 
-#Using GGPlot
-ggplot(condensed_p_s, aes(product, company_response_to_consumer, colour = state)) + 
-  geom_point() + labs(x = "Product", y = "Company Response") + scale_x_discrete(label = c("Personal Reports", "Debt", "Credit Card", "Mortgage")) + scale_colour_brewer(palette = "Spectral")
+### GEOGRAPHIC DATA ####
+
+# # Downloading the shapefile boundaries for states using tigris package
+states <- states(cb=T)
+
+#### STATE BY STATE SHADED MAP ####
+
+grouped_states <- complaints %>% 
+  group_by(state) %>%
+  summarize(total=n()) 
+
+# Tigris function GEO_JOIN to bring together 
+states_merged_sb <- geo_join(states, grouped_states, "STUSPS", "state")
+
+# MAKING THE MAP ####
+
+# getting rid of rows with NA values
+states_merged_sb <- subset(states_merged_sb, !is.na(total))
+states_merged_sb$total <- as.integer(states_merged_sb$total)
+
+# creating a color palette based on the number range in the total column
+mypalette <- colorNumeric("Spectral", domain=states_merged_sb$total)
+            
+popup_sb <- paste0("Total complaints: ", as.character(states_merged_sb$total))
+
+leaflet() %>% 
+  addTiles() %>% # <-- Base map
+  setView(-98.483330, 38.712046, zoom = 4) %>% # <-- Zooming to Continental US
+  addPolygons(data = states_merged_sb , # <-- Adding polygons to map
+              fillColor = ~mypalette(states_merged_sb$total), 
+              fillOpacity = 0.9, 
+              weight = 0.2, 
+              smoothFactor = 0.2,
+              label=popup_sb, # <--- Hover popups
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  addLegend(pal = mypalette,    # <--- Adding a legend
+            values = states_merged_sb$total,
+            bins = 4,
+            position = "bottomright", 
+            title = "Total complaints", 
+            labFormat = labelFormat(digits = 0)
+  )
 
 ```
 
